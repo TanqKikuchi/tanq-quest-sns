@@ -7,13 +7,20 @@
 // 本番環境では、GAS Web AppsのデプロイURLを設定
 // 例: apiClient.baseUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
 
-// 開発環境での設定（必要に応じて変更）
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+// config.js で定義した値を参照
+const resolvedBaseUrl =
+  window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL;
+
+if (resolvedBaseUrl) {
+  apiClient.baseUrl = resolvedBaseUrl;
+} else if (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1'
+) {
   // ローカル開発環境
   // apiClient.baseUrl = 'http://localhost:8080';
 } else {
-  // 本番環境
-  apiClient.baseUrl = 'https://script.google.com/macros/s/AKfycbwBz_jGdch1PLirq0fWWiABbdN2zSBi7P2i8PwbxIa-gMGnt0YTQ1lg_UyolKIcKqu9/exec';
+  console.error('APIベースURLが設定されていません。frontend/js/config.js を確認してください。');
 }
 
 // アプリケーション初期化

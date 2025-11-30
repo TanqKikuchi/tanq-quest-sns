@@ -3,11 +3,20 @@
  * GAS Web Apps APIとの通信を管理
  */
 
+const DEFAULT_API_BASE_URL =
+  (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || '';
+
 class ApiClient {
   constructor(baseUrl) {
-    this.baseUrl = baseUrl || '';
+    this.baseUrl = baseUrl || DEFAULT_API_BASE_URL || '';
     this.currentUser = null;
     this.currentProfile = null;
+  }
+
+  ensureBaseUrl() {
+    if (!this.baseUrl) {
+      throw new Error('APIベースURLが設定されていません (frontend/js/config.js を確認してください)');
+    }
   }
 
   /**
@@ -17,8 +26,14 @@ class ApiClient {
    * Content-Type: text/plain を使用してプリフライトリクエストを回避します。
    */
   async request(path, options = {}) {
-    // GAS Web Appsの場合、POSTリクエストでもクエリパラメータを使用
-    let url = `${this.baseUrl}?path=${encodeURIComponent(path)}`;
+    // ベースURLを確実にセット
+    if (!this.baseUrl && DEFAULT_API_BASE_URL) {
+      this.baseUrl = DEFAULT_API_BASE_URL;
+    }
+    this.ensureBaseUrl();
+
+    const separator = this.baseUrl.includes('?') ? '&' : '?';
+    let url = `${this.baseUrl}${separator}path=${encodeURIComponent(path)}`;
     
     // 認証情報をクエリパラメータに追加（ヘッダーの代わりに）
     if (this.currentUser && this.currentUser.id) {
@@ -30,17 +45,16 @@ class ApiClient {
       url += `&_method=${encodeURIComponent(options.headers['_method'])}`;
     }
     
-    const config = {
-      method: options.method || 'GET',
-      // Content-Type: text/plain を使用してプリフライトリクエストを回避
-      headers: {
-        'Content-Type': 'text/plain'
-      }
-    };
+    const method = options.method || 'GET';
+    const config = { method };
 
-    // リクエストボディ（JSON文字列として送信）
-    if (options.body) {
-      config.body = JSON.stringify(options.body);
+    if (method !== 'GET') {
+      const formData = new URLSearchParams();
+      formData.append('payload', options.body ? JSON.stringify(options.body) : '{}');
+      config.headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      };
+      config.body = formData.toString();
     }
 
     try {

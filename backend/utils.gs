@@ -230,10 +230,23 @@ function createSuccessResponse(data) {
 function getRequestBody(request) {
   try {
     if (request.postData && request.postData.contents) {
+      const contentType = request.postData.type || '';
+      
+      // application/x-www-form-urlencoded（URLSearchParams）で送信された場合
+      if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
+        const params = Utilities.parseQueryString(request.postData.contents);
+        if (params.payload) {
+          return JSON.parse(params.payload);
+        }
+        return params;
+      }
+      
+      // text/plain などその他の形式はJSONとして扱う
       return JSON.parse(request.postData.contents);
     }
     return {};
   } catch (e) {
+    Logger.log('Failed to parse request body: ' + e);
     return {};
   }
 }
@@ -410,19 +423,16 @@ function validateStatus(status) {
 }
 
 /**
- * CORS対応のレスポンスを返す（HtmlService版）
+ * CORS対応のレスポンスを返す（ContentService版）
  * すべてのAPIハンドラーでこの関数を使用してください
  * 
- * 注意: GAS Web Appsでは、HtmlServiceを使用することでCORSヘッダーが
- * 自動的に設定されます。MIMEタイプはContentServiceを使用して設定します。
+ * 注意: GAS Web Appsでは、ContentServiceを使用してJSONを返します。
+ * Web Appsの設定で「アクセスできるユーザー」を「全員」に設定することで、
+ * CORSの問題を回避できます。
  */
 function createCorsResponse(data) {
   const json = JSON.stringify(data);
-  // HtmlServiceでJSONを返す場合、setContentでJSON文字列を設定
-  // MIMEタイプは自動的に推測されますが、明示的に設定するために
-  // ContentServiceのMimeTypeを使用します
-  return HtmlService.createHtmlOutput(json)
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .setSandboxMode(HtmlService.SandboxMode.IFRAME);
+  return ContentService.createTextOutput(json)
+    .setMimeType(ContentService.MimeType.JSON);
 }
 

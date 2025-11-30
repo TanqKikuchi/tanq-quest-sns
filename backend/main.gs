@@ -30,10 +30,23 @@ function doPost(e) {
 }
 
 /**
+ * OPTIONSリクエストを処理（CORS preflight）
+ */
+function doOptions(e) {
+  return ContentService.createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+/**
  * リクエストをルーティング
  */
 function handleRequest(e, method) {
   try {
+    // OPTIONSリクエスト（CORS preflight）の処理
+    if (method === 'OPTIONS') {
+      return doOptions(e);
+    }
+    
     // パスを取得（クエリパラメータまたはパスパラメータから）
     let path = e.parameter.path || '';
     

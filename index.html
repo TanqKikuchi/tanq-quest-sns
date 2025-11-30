@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>探究学舎コミュニティSNS</title>
+  <link rel="stylesheet" href="frontend/styles/main.css">
+</head>
+<body>
+  <!-- ヘッダー -->
+  <header id="header" class="header">
+    <div class="header-container">
+      <h1 class="logo">探究学舎コミュニティ</h1>
+      <nav class="nav">
+        <a href="#quest" class="nav-link" data-page="quest">クエストポータル</a>
+        <a href="#community" class="nav-link" data-page="community">コミュニティ</a>
+        <a href="#post" class="nav-link" data-page="post">投稿</a>
+        <a href="#profile" class="nav-link" data-page="profile">マイページ</a>
+        <a href="#admin" class="nav-link admin-link" data-page="admin" style="display: none;">管理者</a>
+        <button id="logout-btn" class="btn-logout">ログアウト</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main id="main-content" class="main-content">
+    <!-- ログイン画面 -->
+    <div id="login-page" class="page active">
+      <div class="login-container">
+        <h2>ログイン</h2>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="email">メールアドレス</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          <button type="submit" class="btn-primary">ログイン</button>
+        </form>
+        <div id="login-error" class="error-message"></div>
+      </div>
+    </div>
+
+    <!-- 初回画面（章受講確認） -->
+    <div id="welcome-page" class="page">
+      <div class="welcome-container">
+        <h2>初回セットアップ</h2>
+        <p>◯章を受講しましたか？</p>
+        <div class="button-group">
+          <button id="yes-chapter-btn" class="btn-primary">はい</button>
+          <button id="no-chapter-btn" class="btn-secondary">いいえ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- クエストポータル -->
+    <div id="quest-page" class="page">
+      <div class="quest-container">
+        <section class="current-quest-section">
+          <h2>今週のクエスト</h2>
+          <div id="current-quest" class="current-quest-card">
+            <!-- 今週のクエストがここに表示されます -->
+          </div>
+        </section>
+
+        <section class="quest-timeline-section">
+          <h2>クエスト投稿タイムライン</h2>
+          <div id="quest-timeline" class="timeline">
+            <!-- 投稿がここに表示されます -->
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- コミュニティタイムライン -->
+    <div id="community-page" class="page">
+      <div class="community-container">
+        <div class="filter-sort-bar">
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">全体</button>
+            <button class="filter-tab" data-filter="school">校舎別</button>
+            <button class="filter-tab" data-filter="class">クラス別</button>
+            <button class="filter-tab" data-filter="grade">学年別</button>
+            <button class="filter-tab" data-filter="follow">フォロー</button>
+            <button class="filter-tab" data-filter="level">Lv.別</button>
+          </div>
+          <div class="sort-options">
+            <select id="sort-select">
+              <option value="newest">新着順</option>
+              <option value="clap">👏 多い順</option>
+              <option value="heart">❤️ 多い順</option>
+              <option value="eye">👀 多い順</option>
+            </select>
+          </div>
+        </div>
+        <div id="community-timeline" class="timeline">
+          <!-- 投稿がここに表示されます -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 投稿画面 -->
+    <div id="post-page" class="page">
+      <div class="post-container">
+        <h2>投稿を作成</h2>
+        <form id="post-form">
+          <div class="form-group">
+            <label for="post-images">写真（最大4枚）</label>
+            <input type="file" id="post-images" name="images" multiple accept="image/*" max="4">
+            <div id="image-preview" class="image-preview"></div>
+          </div>
+          <div class="form-group">
+            <label for="post-title">タイトル or 一言（任意）</label>
+            <input type="text" id="post-title" name="title" placeholder="タイトルを入力">
+          </div>
+          <div class="form-group">
+            <label for="post-quest">クエスト選択</label>
+            <select id="post-quest" name="quest_id" required>
+              <option value="">クエストを選択</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="post-effort">頑張った度（💪1〜5）</label>
+            <input type="range" id="post-effort" name="effort_score" min="1" max="5" value="3" required>
+            <span id="effort-value">3</span>
+          </div>
+          <div class="form-group">
+            <label for="post-excitement">わくわく度（⭐️1〜5）</label>
+            <input type="range" id="post-excitement" name="excitement_score" min="1" max="5" value="3" required>
+            <span id="excitement-value">3</span>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="post-allow-promotion" name="allow_promotion">
+              HP/広告掲載許諾（任意）
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="post-notice-1" name="notice_1" required>
+              注意事項1（必須）
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="post-notice-2" name="notice_2" required>
+              注意事項2（必須）
+            </label>
+          </div>
+          <button type="submit" class="btn-primary">確認画面へ</button>
+        </form>
+      </div>
+
+      <!-- 投稿確認画面 -->
+      <div id="post-confirm-page" class="page">
+        <div class="post-confirm-container">
+          <h2>投稿内容の確認</h2>
+          <div id="post-confirm-content"></div>
+          <div class="button-group">
+            <button id="post-confirm-submit" class="btn-primary">投稿する</button>
+            <button id="post-confirm-back" class="btn-secondary">戻る</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理者ダッシュボード -->
+    <div id="admin-page" class="page">
+      <div class="admin-container">
+        <h2>管理者ダッシュボード</h2>
+        
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-tab="metrics">メトリクス</button>
+          <button class="admin-tab" data-tab="posts">投稿管理</button>
+          <button class="admin-tab" data-tab="reports">通報管理</button>
+          <button class="admin-tab" data-tab="users" id="admin-users-tab" style="display: none;">ユーザー管理</button>
+        </div>
+
+        <!-- メトリクスタブ -->
+        <div id="admin-metrics-tab" class="admin-tab-content active">
+          <div class="metrics-controls">
+            <label>週開始日: <input type="date" id="metrics-week-start"></label>
+            <label>週終了日: <input type="date" id="metrics-week-end"></label>
+            <button id="load-metrics-btn" class="btn-primary">読み込む</button>
+          </div>
+          <div id="admin-metrics" class="metrics-container">
+            <!-- メトリクスがここに表示されます -->
+          </div>
+        </div>
+
+        <!-- 投稿管理タブ -->
+        <div id="admin-posts-tab" class="admin-tab-content">
+          <div class="admin-search-bar">
+            <input type="text" id="admin-posts-search" placeholder="検索キーワード">
+            <select id="admin-posts-status">
+              <option value="">すべて</option>
+              <option value="public">公開</option>
+              <option value="private">非公開</option>
+            </select>
+            <button id="admin-posts-search-btn" class="btn-primary">検索</button>
+          </div>
+          <div id="admin-posts-list" class="admin-list">
+            <!-- 投稿一覧がここに表示されます -->
+          </div>
+        </div>
+
+        <!-- 通報管理タブ -->
+        <div id="admin-reports-tab" class="admin-tab-content">
+          <div class="admin-filter-bar">
+            <select id="admin-reports-status">
+              <option value="">すべて</option>
+              <option value="pending">未対応</option>
+              <option value="reviewed">確認済み</option>
+              <option value="resolved">解決済み</option>
+            </select>
+            <button id="admin-reports-load-btn" class="btn-primary">読み込む</button>
+          </div>
+          <div id="admin-reports-list" class="admin-list">
+            <!-- 通報一覧がここに表示されます -->
+          </div>
+        </div>
+
+        <!-- ユーザー管理タブ -->
+        <div id="admin-users-tab" class="admin-tab-content">
+          <div id="admin-users-list" class="admin-list">
+            <!-- ユーザー一覧がここに表示されます -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- マイページ -->
+    <div id="profile-page" class="page">
+      <div class="profile-container">
+        <section class="profile-info-section">
+          <h2>マイプロフィール</h2>
+          <div id="profile-info" class="profile-card">
+            <!-- プロフィール情報がここに表示されます -->
+          </div>
+        </section>
+
+        <section class="profile-follows-section">
+          <h2>フォロー一覧</h2>
+          <div id="profile-follows" class="follow-list-container">
+            <!-- フォロー一覧がここに表示されます -->
+          </div>
+        </section>
+
+        <section class="profile-posts-section">
+          <h2>自分の投稿一覧</h2>
+          <div id="profile-posts" class="timeline">
+            <!-- 投稿がここに表示されます -->
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- フッター -->
+  <footer class="footer">
+    <div class="footer-container">
+      <a href="#terms">利用規約</a>
+      <a href="#privacy">プライバシーポリシー</a>
+      <a href="#contact">お問い合わせ</a>
+    </div>
+  </footer>
+
+  <script src="frontend/js/ui-common.js"></script>
+  <script src="frontend/js/api-client.js"></script>
+  <script src="frontend/js/auth.js"></script>
+  <script src="frontend/js/router.js"></script>
+  <script src="frontend/js/quest.js"></script>
+  <script src="frontend/js/community.js"></script>
+  <script src="frontend/js/post.js"></script>
+  <script src="frontend/js/post-edit.js"></script>
+  <script src="frontend/js/profile.js"></script>
+  <script src="frontend/js/follow.js"></script>
+  <script src="frontend/js/admin.js"></script>
+  <script src="frontend/js/main.js"></script>
+</body>
+</html>
+

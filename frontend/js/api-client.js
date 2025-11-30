@@ -12,23 +12,33 @@ class ApiClient {
 
   /**
    * APIリクエストを送信
+   * 
+   * 注意: GAS Web AppsはOPTIONSリクエスト（CORS preflight）をサポートしていないため、
+   * Content-Type: text/plain を使用してプリフライトリクエストを回避します。
    */
   async request(path, options = {}) {
-    const url = `${this.baseUrl}?path=${encodeURIComponent(path)}`;
+    // GAS Web Appsの場合、POSTリクエストでもクエリパラメータを使用
+    let url = `${this.baseUrl}?path=${encodeURIComponent(path)}`;
+    
+    // 認証情報をクエリパラメータに追加（ヘッダーの代わりに）
+    if (this.currentUser && this.currentUser.id) {
+      url += `&user_id=${encodeURIComponent(this.currentUser.id)}`;
+    }
+    
+    // _methodパラメータを追加（PUT/DELETE/PATCHの場合）
+    if (options.headers && options.headers['_method']) {
+      url += `&_method=${encodeURIComponent(options.headers['_method'])}`;
+    }
+    
     const config = {
       method: options.method || 'GET',
+      // Content-Type: text/plain を使用してプリフライトリクエストを回避
       headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
+        'Content-Type': 'text/plain'
       }
     };
 
-    // 認証情報を追加
-    if (this.currentUser && this.currentUser.id) {
-      config.headers['X-User-Id'] = this.currentUser.id;
-    }
-
-    // リクエストボディ
+    // リクエストボディ（JSON文字列として送信）
     if (options.body) {
       config.body = JSON.stringify(options.body);
     }
@@ -36,12 +46,16 @@ class ApiClient {
     try {
       const response = await fetch(url, config);
       
-      // ネットワークエラーのチェック
-      if (!response.ok) {
-        throw new Error(`Network error: ${response.status} ${response.statusText}`);
+      // レスポンステキストを取得
+      const text = await response.text();
+      
+      // JSONとしてパース
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
       }
-
-      const data = await response.json();
 
       if (!data.success) {
         const errorCode = data.error?.code || 'UNKNOWN_ERROR';

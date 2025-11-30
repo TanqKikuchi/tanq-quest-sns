@@ -13,7 +13,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
   // apiClient.baseUrl = 'http://localhost:8080';
 } else {
   // 本番環境
-  apiClient.baseUrl = 'https://script.google.com/macros/s/AKfycbyOlYN06Lq1Y2gOUp2gVYJdqYqXywu5UhjFJ77un4_13LAunleUfv6TJqreuzyd8Iyl/exec';
+  apiClient.baseUrl = 'https://script.google.com/macros/s/AKfycbwBz_jGdch1PLirq0fWWiABbdN2zSBi7P2i8PwbxIa-gMGnt0YTQ1lg_UyolKIcKqu9/exec';
 }
 
 // アプリケーション初期化

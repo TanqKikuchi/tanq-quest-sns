@@ -144,39 +144,62 @@ function setupScoreSliders() {
  */
 function showConfirmPage() {
   const form = document.getElementById('post-form');
-  if (!form) return;
+  if (!form) {
+    console.error('post-form要素が見つかりません');
+    return;
+  }
 
   const formData = new FormData(form);
   const confirmContent = document.getElementById('post-confirm-content');
-  if (!confirmContent) return;
+  if (!confirmContent) {
+    console.error('post-confirm-content要素が見つかりません');
+    return;
+  }
+
+  const postPage = document.getElementById('post-page');
+  const confirmPage = document.getElementById('post-confirm-page');
+  if (!postPage || !confirmPage) {
+    console.error('post-pageまたはpost-confirm-page要素が見つかりません');
+    return;
+  }
+
+  // フォームデータの検証
+  const questId = formData.get('quest_id');
+  const effortScore = formData.get('effort_score');
+  const excitementScore = formData.get('excitement_score');
+  
+  if (!questId) {
+    notificationManager.error('クエストを選択してください');
+    return;
+  }
 
   // 確認内容を生成
   let html = '<div class="confirm-content">';
   
   if (selectedImages.length > 0) {
     html += '<h3>画像</h3><div class="confirm-images">';
-    // 画像は非同期で読み込まれるため、プレースホルダーを表示
     html += '<p>画像 ' + selectedImages.length + ' 枚が選択されています</p>';
     html += '</div>';
   }
 
-  const questId = formData.get('quest_id');
   const selectedQuestObj = quests.find(q => q.id === questId);
   if (selectedQuestObj) {
     html += `<p><strong>クエスト:</strong> ${selectedQuestObj.title}</p>`;
+  } else {
+    html += `<p><strong>クエスト:</strong> ${questId}</p>`;
   }
 
   html += `<p><strong>タイトル:</strong> ${formData.get('title') || '（なし）'}</p>`;
-  html += `<p><strong>頑張った度:</strong> ${formData.get('effort_score')} / 5</p>`;
-  html += `<p><strong>わくわく度:</strong> ${formData.get('excitement_score')} / 5</p>`;
-  html += `<p><strong>HP/広告掲載許諾:</strong> ${formData.get('allow_promotion') ? '許可' : '不許可'}</p>`;
+  html += `<p><strong>頑張った度:</strong> ${effortScore || '未設定'} / 5</p>`;
+  html += `<p><strong>わくわく度:</strong> ${excitementScore || '未設定'} / 5</p>`;
+  html += `<p><strong>HP/広告掲載許諾:</strong> ${formData.get('allow_promotion') === 'on' ? '許可' : '不許可'}</p>`;
   html += '</div>';
 
   confirmContent.innerHTML = html;
 
-  // 確認画面を表示
-  document.getElementById('post-page').classList.remove('active');
-  document.getElementById('post-confirm-page').classList.add('active');
+  // 確認画面を表示（ルーターの影響を受けないように直接操作）
+  postPage.classList.remove('active');
+  confirmPage.classList.add('active');
 
   // 確認画面のボタンイベント
   setupConfirmButtons(formData);

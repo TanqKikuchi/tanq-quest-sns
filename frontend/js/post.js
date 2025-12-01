@@ -50,11 +50,18 @@ function populateQuestSelect(quests) {
  */
 function setupPostForm() {
   const form = document.getElementById('post-form');
-  if (!form) return;
+  if (!form) {
+    console.error('post-form要素が見つかりません（setupPostForm）');
+    return;
+  }
 
   form.addEventListener('submit', (e) => {
+    console.log('Form submit event triggered');
     e.preventDefault();
+    e.stopPropagation();
+    console.log('Default prevented, calling showConfirmPage()');
     showConfirmPage();
+    return false;
   });
 }
 
@@ -143,6 +150,8 @@ function setupScoreSliders() {
  * 確認画面を表示
  */
 function showConfirmPage() {
+  console.log('showConfirmPage() called');
+  
   const form = document.getElementById('post-form');
   if (!form) {
     console.error('post-form要素が見つかりません');
@@ -159,7 +168,7 @@ function showConfirmPage() {
   const postPage = document.getElementById('post-page');
   const confirmPage = document.getElementById('post-confirm-page');
   if (!postPage || !confirmPage) {
-    console.error('post-pageまたはpost-confirm-page要素が見つかりません');
+    console.error('post-pageまたはpost-confirm-page要素が見つかりません', { postPage: !!postPage, confirmPage: !!confirmPage });
     return;
   }
 
@@ -167,6 +176,8 @@ function showConfirmPage() {
   const questId = formData.get('quest_id');
   const effortScore = formData.get('effort_score');
   const excitementScore = formData.get('excitement_score');
+  
+  console.log('Form data:', { questId, effortScore, excitementScore, selectedImagesCount: selectedImages.length });
   
   if (!questId) {
     notificationManager.error('クエストを選択してください');
@@ -195,14 +206,28 @@ function showConfirmPage() {
   html += `<p><strong>HP/広告掲載許諾:</strong> ${formData.get('allow_promotion') === 'on' ? '許可' : '不許可'}</p>`;
   html += '</div>';
 
+  console.log('Generated HTML length:', html.length);
   confirmContent.innerHTML = html;
+  console.log('HTML set to confirmContent');
 
   // 確認画面を表示（ルーターの影響を受けないように直接操作）
-  postPage.classList.remove('active');
+  console.log('Switching pages:', { postPageActive: postPage.classList.contains('active'), confirmPageActive: confirmPage.classList.contains('active') });
+  
+  // すべてのページを非表示にしてから確認画面を表示（ルーターの競合を避ける）
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active');
+  });
+  
   confirmPage.classList.add('active');
+  console.log('Pages switched:', { postPageActive: postPage.classList.contains('active'), confirmPageActive: confirmPage.classList.contains('active') });
+  
+  // 確認画面が正しく表示されているか確認
+  const isVisible = confirmPage.classList.contains('active') && window.getComputedStyle(confirmPage).display !== 'none';
+  console.log('Confirm page visibility:', isVisible);
 
   // 確認画面のボタンイベント
   setupConfirmButtons(formData);
+  console.log('setupConfirmButtons() called');
 }
 
 /**

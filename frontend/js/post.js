@@ -237,18 +237,74 @@ function showConfirmPage() {
   // すべてのページを非表示にしてから確認画面を表示（ルーターの競合を避ける）
   document.querySelectorAll('.page').forEach(page => {
     page.classList.remove('active');
+    page.style.display = 'none'; // 強制的に非表示
   });
   
+  // 確認画面を強制的に表示
   confirmPage.classList.add('active');
-  console.log('Pages switched:', { postPageActive: postPage.classList.contains('active'), confirmPageActive: confirmPage.classList.contains('active') });
+  confirmPage.style.display = 'block'; // 強制的に表示
+  console.log('Pages switched:', { 
+    postPageActive: postPage.classList.contains('active'), 
+    confirmPageActive: confirmPage.classList.contains('active'),
+    confirmPageDisplay: window.getComputedStyle(confirmPage).display
+  });
   
   // 確認画面が正しく表示されているか確認
-  const isVisible = confirmPage.classList.contains('active') && window.getComputedStyle(confirmPage).display !== 'none';
-  console.log('Confirm page visibility:', isVisible);
+  const computedStyle = window.getComputedStyle(confirmPage);
+  const isVisible = confirmPage.classList.contains('active') && 
+                    computedStyle.display !== 'none' && 
+                    computedStyle.visibility !== 'hidden';
+  console.log('Confirm page visibility:', isVisible, {
+    hasActive: confirmPage.classList.contains('active'),
+    display: computedStyle.display,
+    visibility: computedStyle.visibility,
+    opacity: computedStyle.opacity
+  });
+  
+  // 確認コンテンツの表示も確認
+  const contentStyle = window.getComputedStyle(confirmContent);
+  console.log('Confirm content visibility:', {
+    display: contentStyle.display,
+    visibility: contentStyle.visibility,
+    innerHTML: confirmContent.innerHTML.substring(0, 100)
+  });
 
   // 確認画面のボタンイベント
   setupConfirmButtons(formData);
   console.log('setupConfirmButtons() called');
+  
+  // ルーターの干渉を防ぐため、hashchangeイベントを一時的に無効化
+  const preventRouterInterference = (e) => {
+    // 確認画面が表示されている場合は、ルーターの動作を防ぐ
+    if (confirmPage.classList.contains('active')) {
+      e.stopImmediatePropagation();
+      console.log('Prevented router interference');
+    }
+  };
+  
+  // hashchangeイベントを一時的に監視
+  window.addEventListener('hashchange', preventRouterInterference, true);
+  
+  // ルーターの干渉を防ぐため、少し遅延させて再度確認画面を表示
+  setTimeout(() => {
+    // 確認画面がまだ表示されているか確認
+    const currentDisplay = window.getComputedStyle(confirmPage).display;
+    if (!confirmPage.classList.contains('active') || currentDisplay === 'none') {
+      console.warn('Confirm page was hidden, restoring...', {
+        hasActive: confirmPage.classList.contains('active'),
+        display: currentDisplay
+      });
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+        page.style.display = 'none';
+      });
+      confirmPage.classList.add('active');
+      confirmPage.style.display = 'block';
+    }
+    
+    // イベントリスナーを削除（メモリリークを防ぐ）
+    window.removeEventListener('hashchange', preventRouterInterference, true);
+  }, 200);
 }
 
 /**

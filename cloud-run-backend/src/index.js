@@ -12,13 +12,14 @@ import questsRouter from './routes/quests.js'
 import followsRouter from './routes/follows.js'
 import postsRouter from './routes/posts.js'
 import profilesRouter from './routes/profiles.js'
+import imagesRouter from './routes/images.js'
 
 const app = express()
 
 app.use(helmet())
 app.use(morgan(config.isProd ? 'combined' : 'dev'))
-app.use(express.json({ limit: '2mb' }))
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(corsMiddleware)
 
 app.get('/', (req, res) => {
@@ -32,6 +33,7 @@ app.use('/api/quests', questsRouter)
 app.use('/api/follows', followsRouter)
 app.use('/api/posts', postsRouter)
 app.use('/api/profiles', profilesRouter)
+app.use('/api/images', imagesRouter)
 
 app.use('*', (req, res) => {
   res.status(404).json({

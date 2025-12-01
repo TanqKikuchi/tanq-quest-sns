@@ -9,6 +9,8 @@ import healthRouter from './routes/health.js'
 import authRouter from './routes/auth.js'
 import usersRouter from './routes/users.js'
 import questsRouter from './routes/quests.js'
+import followsRouter from './routes/follows.js'
+import postsRouter from './routes/posts.js'
 
 const app = express()
 
@@ -26,6 +28,8 @@ app.use('/health', healthRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/quests', questsRouter)
+app.use('/api/follows', followsRouter)
+app.use('/api/posts', postsRouter)
 
 app.use('*', (req, res) => {
   res.status(404).json({

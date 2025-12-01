@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // セッションを復元
   apiClient.restoreSession();
   
+  // ヘッダーの表示制御
+  updateHeaderVisibility();
+  
   // 管理者リンクの表示制御
   updateAdminLinkVisibility();
   
@@ -49,6 +52,34 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
+ * ヘッダーの表示/非表示を更新
+ * ログイン前はナビゲーションメニューを非表示にする
+ */
+function updateHeaderVisibility() {
+  const nav = document.querySelector('.nav');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const logoutBtn = document.getElementById('logout-btn');
+  
+  if (apiClient.isAuthenticated()) {
+    // ログイン済み: ナビゲーションメニューを表示
+    navLinks.forEach(link => {
+      link.style.display = 'inline-block';
+    });
+    if (logoutBtn) {
+      logoutBtn.style.display = 'block';
+    }
+  } else {
+    // 未ログイン: ナビゲーションメニューを非表示
+    navLinks.forEach(link => {
+      link.style.display = 'none';
+    });
+    if (logoutBtn) {
+      logoutBtn.style.display = 'none';
+    }
+  }
+}
+
+/**
  * 管理者リンクの表示/非表示を更新
  */
 function updateAdminLinkVisibility() {
@@ -57,14 +88,17 @@ function updateAdminLinkVisibility() {
     const adminLink = document.querySelector('.admin-link');
     if (adminLink && (role === 'Admin' || role === 'Moderator')) {
       adminLink.style.display = 'block';
+    } else if (adminLink) {
+      adminLink.style.display = 'none';
     }
   }
 }
 
-// ユーザー情報更新時に管理者リンクを更新
+// ユーザー情報更新時にヘッダーと管理者リンクを更新
 const originalGetMe = apiClient.getMe.bind(apiClient);
 apiClient.getMe = async function() {
   const result = await originalGetMe();
+  updateHeaderVisibility();
   updateAdminLinkVisibility();
   return result;
 };
@@ -72,7 +106,15 @@ apiClient.getMe = async function() {
 const originalLogin = apiClient.login.bind(apiClient);
 apiClient.login = async function(email) {
   const result = await originalLogin(email);
+  updateHeaderVisibility();
   updateAdminLinkVisibility();
   return result;
+};
+
+const originalLogout = apiClient.logout.bind(apiClient);
+apiClient.logout = async function() {
+  await originalLogout();
+  updateHeaderVisibility();
+  updateAdminLinkVisibility();
 };
 

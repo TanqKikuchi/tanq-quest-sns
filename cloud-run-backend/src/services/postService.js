@@ -1,5 +1,7 @@
-import { getAllRows, findRowByColumn } from './sheetsService.js'
-import { parseDate } from '../utils/date.js'
+import { getAllRows, findRowByColumn, appendRow, updateCell } from './sheetsService.js'
+import { parseDate, getCurrentDateTime, getCurrentDate } from '../utils/date.js'
+import { v4 as uuidv4 } from 'uuid'
+import { createHttpError } from '../utils/httpError.js'
 
 /**
  * 画像URL文字列を配列に変換
@@ -257,3 +259,106 @@ export async function getMyPosts (userId) {
   return { posts }
 }
 
+
+/**
+ * 画像URL配列を文字列に変換
+ */
+function imageUrlsToString (imageUrls) {
+  if (!imageUrls || imageUrls.length === 0) return ''
+  return imageUrls.join(',')
+}
+
+/**
+ * 投稿作成
+ */
+export async function createPost (userId, postData) {
+  // 必須フィールドのバリデーション
+  if (!postData.quest_id) {
+    throw createHttpError(400, 'VALIDATION_ERROR', 'quest_id is required')
+  }
+  if (postData.effort_score === undefined || postData.effort_score === null) {
+    throw createHttpError(400, 'VALIDATION_ERROR', 'effort_score is required')
+  }
+  if (postData.excitement_score === undefined || postData.excitement_score === null) {
+    throw createHttpError(400, 'VALIDATION_ERROR', 'excitement_score is required')
+  }
+
+  // スコアの範囲チェック
+  const effortScore = parseInt(postData.effort_score)
+  const excitementScore = parseInt(postData.excitement_score)
+  
+  if (effortScore < 1 || effortScore > 5) {
+    throw createHttpError(400, 'VALIDATION_ERROR', 'effort_score must be between 1 and 5')
+  }
+  if (excitementScore < 1 || excitementScore > 5) {
+    throw createHttpError(400, 'VALIDATION_ERROR', 'excitement_score must be between 1 and 5')
+  }
+
+  // 画像数のチェック（最大4枚）
+  if (postData.image_urls && postData.image_urls.length > 4) {
+    throw createHttpError(400, 'VALIDATION_ERROR', 'Maximum 4 images allowed')
+  }
+
+  // 1日1投稿制限チェック
+  const today = getCurrentDate()
+  const { rows: postLimitsRows } = await getAllRows('PostLimits')
+  const userIdKey = 'user_id'
+  const dateKey = 'date'
+  const postCountKey = 'post_count'
+
+  const todayLimit = postLimitsRows.find(row => {
+    return row[userIdKey] === userId && row[dateKey] === today
+  })
+
+  if (todayLimit && todayLimit[postCountKey] >= 1) {
+    throw createHttpError(429, 'LIMIT_EXCEEDED', 'Only one post per day is allowed')
+  }
+
+  // 投稿作成
+  const postId = uuidv4()
+  const now = getCurrentDateTime()
+
+  const postRow = [
+    postId,
+    userId,
+    postData.quest_id,
+    postData.title || '',
+    postData.body || '',
+    imageUrlsToString(postData.image_urls || []),
+    effortScore,
+    excitementScore,
+    postData.is_public !== undefined ? postData.is_public : true,
+    postData.allow_promotion || false,
+    now,
+    now
+  ]
+
+  await appendRow('Posts', postRow)
+
+  // 投稿制限を更新
+  if (todayLimit) {
+    const limitMatch = await findRowByColumn('PostLimits', 'user_id', userId)
+    if (limitMatch) {
+      await updateCell('PostLimits', limitMatch.rowIndex, postCountKey, 1)
+    }
+  } else {
+    const limitRow = [
+      userId,
+      today,
+      1,
+      now
+    ]
+    await appendRow('PostLimits', limitRow)
+  }
+
+  // 作成した投稿を取得
+  const createdPostMatch = await findRowByColumn('Posts', 'id', postId)
+  if (!createdPostMatch) {
+    throw createHttpError(500, 'SERVER_ERROR', 'Failed to retrieve created post')
+  }
+
+  const post = createdPostMatch.object
+  post.image_urls = stringToImageUrls(post.image_urls)
+
+  return { post }
+}

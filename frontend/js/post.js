@@ -155,13 +155,8 @@ function showConfirmPage() {
   
   if (selectedImages.length > 0) {
     html += '<h3>画像</h3><div class="confirm-images">';
-    selectedImages.forEach((file, index) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        // 非同期なので後で処理
-      };
-      reader.readAsDataURL(file);
-    });
+    // 画像は非同期で読み込まれるため、プレースホルダーを表示
+    html += '<p>画像 ' + selectedImages.length + ' 枚が選択されています</p>';
     html += '</div>';
   }
 

@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getPostsByQuest, getPosts, getMyPosts } from '../services/postService.js'
+import { getPostsByQuest, getPosts, getMyPosts, createPost } from '../services/postService.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
@@ -52,6 +52,19 @@ router.get('/my', requireAuth, async (req, res, next) => {
   try {
     const userId = req.user.id
     const result = await getMyPosts(userId)
+    res.json({ success: true, ...result })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// POST /api/posts - 投稿作成
+router.post('/', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const postData = req.body
+    
+    const result = await createPost(userId, postData)
     res.json({ success: true, ...result })
   } catch (error) {
     next(error)

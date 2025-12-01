@@ -1,4 +1,4 @@
-import { findRowByColumn, getAllRows } from './sheetsService.js'
+import { findRowByColumn, getAllRows, updateCell } from './sheetsService.js'
 
 /**
  * プロフィール取得
@@ -69,5 +69,30 @@ export async function getProfile (targetUserId) {
   profile.badges = userBadges
   
   return profile
+}
+
+/**
+ * プロフィール更新
+ */
+export async function updateProfile (userId, updates) {
+  const profileMatch = await findRowByColumn('Profiles', 'user_id', userId)
+  
+  if (!profileMatch) {
+    throw new Error('Profile not found')
+  }
+  
+  const rowIndex = profileMatch.rowIndex
+  
+  // 更新可能なフィールドのみ更新
+  const allowedFields = ['nickname', 'greeting', 'grade', 'class_id', 'completed_chapter']
+  
+  for (const [key, value] of Object.entries(updates)) {
+    if (allowedFields.includes(key)) {
+      await updateCell('Profiles', rowIndex, key, value)
+    }
+  }
+  
+  // 更新後のプロフィールを取得
+  return await getProfile(userId)
 }
 

@@ -45,6 +45,9 @@ function populateQuestSelect(quests) {
   });
 }
 
+// フォーム送信ハンドラーが既に登録されているかチェックするフラグ
+let postFormHandlerRegistered = false;
+
 /**
  * 投稿フォームのセットアップ
  */
@@ -52,6 +55,12 @@ function setupPostForm() {
   const form = document.getElementById('post-form');
   if (!form) {
     console.error('post-form要素が見つかりません（setupPostForm）');
+    return;
+  }
+
+  // 既に登録されている場合はスキップ（重複登録を防ぐ）
+  if (postFormHandlerRegistered) {
+    console.log('Post form handler already registered, skipping');
     return;
   }
 
@@ -63,6 +72,9 @@ function setupPostForm() {
     showConfirmPage();
     return false;
   });
+
+  postFormHandlerRegistered = true;
+  console.log('Post form handler registered');
 }
 
 /**
@@ -191,6 +203,8 @@ function showConfirmPage() {
     html += '<h3>画像</h3><div class="confirm-images">';
     html += '<p>画像 ' + selectedImages.length + ' 枚が選択されています</p>';
     html += '</div>';
+  } else {
+    html += '<p><em>画像は選択されていません</em></p>';
   }
 
   const selectedQuestObj = quests.find(q => q.id === questId);
@@ -207,8 +221,15 @@ function showConfirmPage() {
   html += '</div>';
 
   console.log('Generated HTML length:', html.length);
+  console.log('Generated HTML preview:', html.substring(0, 200));
+  
+  // 確認コンテンツを確実に設定
+  confirmContent.innerHTML = '';
   confirmContent.innerHTML = html;
-  console.log('HTML set to confirmContent');
+  
+  // 確認コンテンツが正しく設定されたか確認
+  const contentCheck = confirmContent.innerHTML.length > 0;
+  console.log('HTML set to confirmContent:', contentCheck, 'Content length:', confirmContent.innerHTML.length);
 
   // 確認画面を表示（ルーターの影響を受けないように直接操作）
   console.log('Switching pages:', { postPageActive: postPage.classList.contains('active'), confirmPageActive: confirmPage.classList.contains('active') });

@@ -18,8 +18,12 @@
       config.API_BASE_URL = '';
     } else {
       // 本番（GitHub Pages）用のデフォルト
-      config.API_BASE_URL =
-        'https://script.google.com/macros/s/AKfycbwBz_jGdch1PLirq0fWWiABbdN2zSBi7P2i8PwbxIa-gMGnt0YTQ1lg_UyolKIcKqu9/exec';
+      // Cloud Runバックエンドを使用する場合（推奨、CORS問題解決）
+      config.API_BASE_URL = 'https://tanq-quest-api-1021284962324.asia-northeast1.run.app';
+      
+      // GASバックエンドを使用する場合（CORS問題あり）
+      // config.API_BASE_URL =
+      //   'https://script.google.com/macros/s/AKfycbwBz_jGdch1PLirq0fWWiABbdN2zSBi7PwbxIa-gMGnt0YTQ1lg_UyolKIcKqu9/exec';
     }
   }
 

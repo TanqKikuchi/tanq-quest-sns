@@ -22,8 +22,9 @@ class ApiClient {
   /**
    * APIリクエストを送信
    * 
-   * 注意: GAS Web AppsはOPTIONSリクエスト（CORS preflight）をサポートしていないため、
-   * Content-Type: text/plain を使用してプリフライトリクエストを回避します。
+   * Cloud RunとGAS Web Appsの両方に対応
+   * - Cloud Run: 通常のREST API形式（直接パス指定、JSONリクエスト）
+   * - GAS Web Apps: クエリパラメータ形式（?path=...、form-urlencoded）
    */
   async request(path, options = {}) {
     // ベースURLを確実にセット
@@ -32,29 +33,54 @@ class ApiClient {
     }
     this.ensureBaseUrl();
 
-    const separator = this.baseUrl.includes('?') ? '&' : '?';
-    let url = `${this.baseUrl}${separator}path=${encodeURIComponent(path)}`;
+    // Cloud Runかどうかを判定（.run.appで終わる）
+    const isCloudRun = this.baseUrl.includes('.run.app');
     
-    // 認証情報をクエリパラメータに追加（ヘッダーの代わりに）
-    if (this.currentUser && this.currentUser.id) {
-      url += `&user_id=${encodeURIComponent(this.currentUser.id)}`;
-    }
-    
-    // _methodパラメータを追加（PUT/DELETE/PATCHの場合）
-    if (options.headers && options.headers['_method']) {
-      url += `&_method=${encodeURIComponent(options.headers['_method'])}`;
-    }
-    
+    let url;
     const method = options.method || 'GET';
     const config = { method };
 
-    if (method !== 'GET') {
-      const formData = new URLSearchParams();
-      formData.append('payload', options.body ? JSON.stringify(options.body) : '{}');
-      config.headers = {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      };
-      config.body = formData.toString();
+    if (isCloudRun) {
+      // Cloud Run: 通常のREST API形式
+      url = `${this.baseUrl}/${path.replace(/^\//, '')}`;
+      
+      // 認証情報をヘッダーに追加（将来の実装用）
+      // if (this.currentUser && this.currentUser.id) {
+      //   config.headers = config.headers || {};
+      //   config.headers['X-User-Id'] = this.currentUser.id;
+      // }
+      
+      if (method !== 'GET' && options.body) {
+        config.headers = {
+          'Content-Type': 'application/json',
+          ...config.headers
+        };
+        config.body = JSON.stringify(options.body);
+      }
+    } else {
+      // GAS Web Apps: クエリパラメータ形式
+      const separator = this.baseUrl.includes('?') ? '&' : '?';
+      url = `${this.baseUrl}${separator}path=${encodeURIComponent(path)}`;
+      
+      // 認証情報をクエリパラメータに追加
+      if (this.currentUser && this.currentUser.id) {
+        url += `&user_id=${encodeURIComponent(this.currentUser.id)}`;
+      }
+      
+      // _methodパラメータを追加（PUT/DELETE/PATCHの場合）
+      if (options.headers && options.headers['_method']) {
+        url += `&_method=${encodeURIComponent(options.headers['_method'])}`;
+      }
+      
+      if (method !== 'GET') {
+        const formData = new URLSearchParams();
+        formData.append('payload', options.body ? JSON.stringify(options.body) : '{}');
+        config.headers = {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          ...config.headers
+        };
+        config.body = formData.toString();
+      }
     }
 
     try {
@@ -112,9 +138,10 @@ class ApiClient {
    * PUTリクエスト
    */
   async put(path, body = {}) {
+    const isCloudRun = this.baseUrl.includes('.run.app');
     return this.request(path, {
-      method: 'POST',
-      headers: { '_method': 'PUT' },
+      method: isCloudRun ? 'PUT' : 'POST',
+      headers: isCloudRun ? {} : { '_method': 'PUT' },
       body: body
     });
   }
@@ -123,9 +150,10 @@ class ApiClient {
    * DELETEリクエスト
    */
   async delete(path) {
+    const isCloudRun = this.baseUrl.includes('.run.app');
     return this.request(path, {
-      method: 'POST',
-      headers: { '_method': 'DELETE' }
+      method: isCloudRun ? 'DELETE' : 'POST',
+      headers: isCloudRun ? {} : { '_method': 'DELETE' }
     });
   }
 
@@ -133,9 +161,10 @@ class ApiClient {
    * PATCHリクエスト
    */
   async patch(path, body = {}) {
+    const isCloudRun = this.baseUrl.includes('.run.app');
     return this.request(path, {
-      method: 'POST',
-      headers: { '_method': 'PATCH' },
+      method: isCloudRun ? 'PATCH' : 'POST',
+      headers: isCloudRun ? {} : { '_method': 'PATCH' },
       body: body
     });
   }

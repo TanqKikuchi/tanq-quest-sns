@@ -6,7 +6,7 @@
 
 ```
 /
-├── backend/          # Google Apps Script (GAS) バックエンド
+├── backend/          # Google Apps Script (GAS) バックエンド（レガシー）
 │   ├── main.gs      # Web Apps エントリーポイント
 │   ├── utils.gs     # 共通ユーティリティ
 │   ├── auth-api.gs  # 認証・ユーザー管理API
@@ -17,6 +17,12 @@
 │   ├── profile-api.gs # プロフィール関連API
 │   ├── admin-api.gs # 管理者機能API
 │   └── initialize-database.gs # データベース初期化
+├── cloud-run-backend/ # Cloud Run バックエンド（推奨、CORS問題解決）
+│   ├── src/         # Node.js + Express 実装
+│   ├── Dockerfile   # Cloud Run デプロイ用
+│   ├── README.md    # Cloud Run バックエンドREADME
+│   ├── DEPLOY.md    # デプロイ手順
+│   └── QUICKSTART.md # クイックスタートガイド
 ├── frontend/        # フロントエンド（GitHub Pages用）
 │   ├── index.html   # メインHTML
 │   ├── js/          # JavaScriptファイル
@@ -33,10 +39,22 @@
 ## 技術スタック
 
 - **フロントエンド**: GitHub Pages (SPA)
-- **バックエンド**: Google Apps Script (GAS) + Web Apps
+- **バックエンド（推奨）**: Cloud Run (Node.js + Express) - CORS問題解決済み
+- **バックエンド（レガシー）**: Google Apps Script (GAS) + Web Apps - CORS問題あり
 - **データベース**: Googleスプレッドシート
 
 ## セットアップ手順
+
+### 0. Cloud Runバックエンドのデプロイ（推奨、CORS問題解決）
+
+**重要**: GASバックエンドはCORS問題により、GitHub Pagesからのアクセスがブロックされます。
+プロトタイプを動作させるには、Cloud Runバックエンドを使用してください。
+
+1. `cloud-run-backend/QUICKSTART.md` を参照してデプロイ
+2. デプロイURLを取得
+3. `frontend/js/config.js` の `API_BASE_URL` をCloud Run URLに設定
+
+詳細は `cloud-run-backend/QUICKSTART.md` を参照してください。
 
 ### 1. データベースの初期化
 

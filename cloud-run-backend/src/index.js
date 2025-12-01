@@ -11,6 +11,7 @@ import usersRouter from './routes/users.js'
 import questsRouter from './routes/quests.js'
 import followsRouter from './routes/follows.js'
 import postsRouter from './routes/posts.js'
+import profilesRouter from './routes/profiles.js'
 
 const app = express()
 
@@ -30,6 +31,7 @@ app.use('/api/users', usersRouter)
 app.use('/api/quests', questsRouter)
 app.use('/api/follows', followsRouter)
 app.use('/api/posts', postsRouter)
+app.use('/api/profiles', profilesRouter)
 
 app.use('*', (req, res) => {
   res.status(404).json({

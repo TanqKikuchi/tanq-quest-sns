@@ -44,11 +44,11 @@ class ApiClient {
       // Cloud Run: 通常のREST API形式
       url = `${this.baseUrl}/${path.replace(/^\//, '')}`;
       
-      // 認証情報をヘッダーに追加（将来の実装用）
-      // if (this.currentUser && this.currentUser.id) {
-      //   config.headers = config.headers || {};
-      //   config.headers['X-User-Id'] = this.currentUser.id;
-      // }
+      // 認証情報をクエリパラメータに追加（GAS互換性のため）
+      if (this.currentUser && this.currentUser.id) {
+        const separator = url.includes('?') ? '&' : '?';
+        url += `${separator}user_id=${encodeURIComponent(this.currentUser.id)}`;
+      }
       
       if (method !== 'GET' && options.body) {
         config.headers = {

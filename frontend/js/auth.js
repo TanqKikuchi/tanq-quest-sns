@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingManager.show('login-page', 'ログイン中...');
         await apiClient.login(email);
         notificationManager.success('ログインしました');
-        checkWelcomePage();
+        // ログイン後はクエストポータルに自動遷移
+        await checkWelcomePage();
+        router.navigate('quest');
       } catch (error) {
         // エラーは既にerrorHandlerで処理されている
         if (error.message) {
